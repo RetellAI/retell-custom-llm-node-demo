@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "strictPropertyInitialization": false,
+    "strictNullChecks": false,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "target": "ES2017",
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "lib": ["ES2021.String", "dom", "es2017"]
+  },
+  "exclude": ["node_modules"]
+}
