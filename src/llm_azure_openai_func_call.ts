@@ -127,11 +127,11 @@ export class FunctionCallingLlmClient {
         }
         const requestMessages: ChatRequestMessage[] = this.PreparePrompt(request);
 
-        // Step 3: Add the function into your request
         const option: GetChatCompletionsOptions = {
             temperature: 0.3,
             maxTokens: 200,
             frequencyPenalty: 1,
+            // Step 3: Add the function into your request
             tools: this.PrepareFunctions(),
         };
 
@@ -151,7 +151,7 @@ export class FunctionCallingLlmClient {
                     let delta = event.choices[0].delta;
                     if (!delta) continue;
 
-
+                    // Step 4: Extract the functions
                     if (delta.toolCalls.length >= 1) {
                         const toolCall = delta.toolCalls[0];
                         // Function calling here.
@@ -181,24 +181,11 @@ export class FunctionCallingLlmClient {
                     }
                 }
             }
-
-            // if (funcArguments) {
-            //     funcCall.arguments = JSON.parse(funcArguments);
-            //     if (funcCall.arguments.response) {
-            //         // push the response to user while executing function.
-            //         const res: RetellResponse = {
-            //             response_id: request.response_id,
-            //             content: funcCall.arguments.response,
-            //             content_complete: false,
-            //             end_call: false,
-            //         };
-            //         ws.send(JSON.stringify(res));
-            //     }
-            // }
         } catch (err) {
             console.error("Error in gpt stream: ", err);
         } finally {
             if (funcCall != null) {
+                // Step 5: Call the functions
                 if (funcCall.funcName === "end_call") {
                     funcCall.arguments = JSON.parse(funcArguments);
                     const res: RetellResponse = {
