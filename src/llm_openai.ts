@@ -47,7 +47,7 @@ export class DemoLlmClient {
     ws.send(JSON.stringify(res));
   }
 
-  // Depend on your LLM, you need to parse the conversation to 
+  // Depend on your LLM, you need to parse the conversation to
   // {
   //   role: 'assistant'/"user",
   //   content: 'the_content'

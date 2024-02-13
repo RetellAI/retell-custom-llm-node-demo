@@ -1,19 +1,19 @@
 # retell-backend-node-demo
 
 This backend repo demonstrates how to start a websocket server that Retell server will connect to. Retell will send
-live transcripts and other updates to the server, and get responses from this server. see [API Docs](https://docs.re-tell.ai/guide/custom-llm-websocket) for walkthrough.
+live transcripts and other updates to the server, and get responses from this server. see [API Docs](https://docs.retellai.com/guide/custom-llm-websocket) for walkthrough.
 
-The protocol of messages we send and expect to receive are documented [here](https://docs.re-tell.ai/api-references/llm-websocket).
+The protocol of messages we send and expect to receive are documented [here](https://docs.retellai.com/api-references/llm-websocket).
 
 This repo also contains code to use Twilio to get number, make phone calls, see [API Docs](https://docs.re-tell.ai/guide/phone-setup) for walkthrough.
 
-This repo contains azure OpenAI & OpenAI, modify the import inside `src/server.ts` to switch between two.
+This repo contains `azure OpenAI` & `OpenAI`, modify the import inside `src/server.ts` to switch between two.
 
 Check this [Youtube Toturial](https://youtu.be/Tz969io9cPc?feature=shared&t=344) containing a walkthrough using the [Frontend Demo](https://github.com/adam-team/retell-frontend-reactjs-demo/tree/client_sdk) and this repo.
 
 ## Steps to run locally to test
 
-1. Add Retell and Azure OpenAI key to ".env.development". Optionally add your twilio credentials if you want to use phone call abilities here.
+1. Add Retell and `Azure OpenAI` key to ".env.development". Optionally add your twilio credentials if you want to use phone call abilities here.
 
 2. Install dependencies
 
@@ -21,22 +21,22 @@ Check this [Youtube Toturial](https://youtu.be/Tz969io9cPc?feature=shared&t=344)
 npm install
 ```
 
-3. Start the server
-
-```bash
-npm run dev
-```
-
-4. In another bash, use ngrok to expose this port to public network
+3. In another bash, use ngrok to expose this port to public network
 
 ```bash
 ngrok http 8080
 ```
 
+4. Start the server
+
+```bash
+npm run dev
+```
+
 You should see a fowarding address like
 `https://dc14-2601-645-c57f-8670-9986-5662-2c9a-adbd.ngrok-free.app`, and you
 are going to take the IP address, prepend it with wss, postpend with
-`llm-websocket` path and use that in the dashboard to create a new agent. Now
+`llm-websocket` path and use that in the [dashboard](https://beta.retellai.com/dashboard) to create a new agent. Now
 the agent you created should connect with your localhost.
 
 The custom LLM URL would look like
