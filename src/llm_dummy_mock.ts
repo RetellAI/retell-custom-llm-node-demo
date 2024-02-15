@@ -1,24 +1,7 @@
 import { WebSocket } from "ws";
+import { RetellRequest, RetellResponse } from "./types";
 
-interface Utterance {
-  role: "agent" | "user";
-  content: string;
-}
-
-export interface RetellRequest {
-  response_id?: number;
-  transcript: Utterance[];
-  interaction_type: "update_only" | "response_required" | "reminder_required";
-}
-
-export interface RetellResponse {
-  response_id?: number;
-  content: string;
-  content_complete: boolean;
-  end_call: boolean;
-}
-
-export class LLMDumbOpenAIClient {
+export class LLMDummyMock {
   constructor() {}
 
   // First sentence requested
@@ -33,6 +16,8 @@ export class LLMDumbOpenAIClient {
   }
 
   async DraftResponse(request: RetellRequest, ws: WebSocket) {
+    console.clear();
+    console.log("req", request);
     if (request.interaction_type === "update_only") {
       // process live transcript update if needed
       return;

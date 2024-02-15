@@ -1,23 +1,6 @@
 import OpenAI from "openai";
 import { WebSocket } from "ws";
-
-interface Utterance {
-  role: "agent" | "user";
-  content: string;
-}
-
-export interface RetellRequest {
-  response_id?: number;
-  transcript: Utterance[];
-  interaction_type: "update_only" | "response_required" | "reminder_required";
-}
-
-export interface RetellResponse {
-  response_id?: number;
-  content: string;
-  content_complete: boolean;
-  end_call: boolean;
-}
+import { RetellRequest, RetellResponse, Utterance } from "./types";
 
 // Define the greeting message of the agent. If you don't want the agent speak first, set to empty string ""
 const beginSentence =

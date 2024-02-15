@@ -5,24 +5,7 @@ import {
   GetChatCompletionsOptions,
 } from "@azure/openai";
 import { WebSocket } from "ws";
-
-interface Utterance {
-  role: "agent" | "user";
-  content: string;
-}
-
-export interface RetellRequest {
-  response_id?: number;
-  transcript: Utterance[];
-  interaction_type: "update_only" | "response_required" | "reminder_required";
-}
-
-export interface RetellResponse {
-  response_id?: number;
-  content: string;
-  content_complete: boolean;
-  end_call: boolean;
-}
+import { RetellRequest, RetellResponse, Utterance } from "./types";
 
 const beginSentence =
   "Hey there, I'm your personal AI therapist, how can I help you?";

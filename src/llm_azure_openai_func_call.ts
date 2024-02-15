@@ -6,24 +6,7 @@ import {
   ChatCompletionsFunctionToolDefinition,
 } from "@azure/openai";
 import { WebSocket } from "ws";
-
-interface Utterance {
-  role: "agent" | "user";
-  content: string;
-}
-
-export interface RetellRequest {
-  response_id?: number;
-  transcript: Utterance[];
-  interaction_type: "update_only" | "response_required" | "reminder_required";
-}
-
-export interface RetellResponse {
-  response_id?: number;
-  content: string;
-  content_complete: boolean;
-  end_call: boolean;
-}
+import { RetellRequest, RetellResponse, Utterance } from "./types";
 
 //Step 1: Define the structure to parse openAI function calling result to our data model
 export interface FunctionCall {
@@ -70,7 +53,7 @@ export class FunctionCallingLlmClient {
     return result;
   }
 
-  private PreparePrompt(request: RetellRequest) {
+  private PreparePrompt(request: RetellRequest, funcResult?: FunctionCall) {
     let transcript = this.ConversationToChatRequestMessages(request.transcript);
     let requestMessages: ChatRequestMessage[] = [
       {
@@ -83,6 +66,32 @@ export class FunctionCallingLlmClient {
     for (const message of transcript) {
       requestMessages.push(message);
     }
+
+    // Populate func result to prompt so that GPT can know what to say given the result
+    if (funcResult) {
+      // add function call to prompt
+      requestMessages.push({
+        role: "assistant",
+        content: null,
+        toolCalls: [
+          {
+            id: funcResult.id,
+            type: "function",
+            function: {
+              name: funcResult.funcName,
+              arguments: JSON.stringify(funcResult.arguments),
+            },
+          },
+        ],
+      });
+      // add function call result to prompt
+      requestMessages.push({
+        role: "tool",
+        toolCallId: funcResult.id,
+        content: funcResult.result,
+      });
+    }
+
     if (request.interaction_type === "reminder_required") {
       requestMessages.push({
         role: "user",
@@ -95,6 +104,7 @@ export class FunctionCallingLlmClient {
   // Step 2: Prepare the function calling definition to the prompt
   private PrepareFunctions(): ChatCompletionsFunctionToolDefinition[] {
     let functions: ChatCompletionsFunctionToolDefinition[] = [
+      // Function to decide when to end call
       {
         type: "function",
         function: {
@@ -113,11 +123,40 @@ export class FunctionCallingLlmClient {
           },
         },
       },
+
+      // function to book appointment
+      {
+        type: "function",
+        function: {
+          name: "book_appointment",
+          description: "Book an appointment to meet our doctor in office.",
+          parameters: {
+            type: "object",
+            properties: {
+              message: {
+                type: "string",
+                description:
+                  "The message you will say while setting up the appointment like 'one moment'",
+              },
+              date: {
+                type: "string",
+                description:
+                  "The date of appointment to make in forms of year-month-day.",
+              },
+            },
+            required: ["message"],
+          },
+        },
+      },
     ];
     return functions;
   }
 
-  async DraftResponse(request: RetellRequest, ws: WebSocket) {
+  async DraftResponse(
+    request: RetellRequest,
+    ws: WebSocket,
+    funcResult?: FunctionCall,
+  ) {
     console.clear();
     console.log("req", request);
 
@@ -125,7 +164,12 @@ export class FunctionCallingLlmClient {
       // process live transcript update if needed
       return;
     }
-    const requestMessages: ChatRequestMessage[] = this.PreparePrompt(request);
+
+    // If there are function call results, add it to prompt here.
+    const requestMessages: ChatRequestMessage[] = this.PreparePrompt(
+      request,
+      funcResult,
+    );
 
     const option: GetChatCompletionsOptions = {
       temperature: 0.3,
@@ -157,6 +201,7 @@ export class FunctionCallingLlmClient {
             if (toolCall.id) {
               if (funcCall) {
                 // Another function received, old function complete, can break here.
+                // You can also modify this to parse more functions to unlock parallel function calling.
                 break;
               } else {
                 funcCall = {
@@ -185,6 +230,8 @@ export class FunctionCallingLlmClient {
     } finally {
       if (funcCall != null) {
         // Step 5: Call the functions
+
+        // If it's to end the call, simply send a last message and end the call
         if (funcCall.funcName === "end_call") {
           funcCall.arguments = JSON.parse(funcArguments);
           const res: RetellResponse = {
@@ -194,6 +241,23 @@ export class FunctionCallingLlmClient {
             end_call: true,
           };
           ws.send(JSON.stringify(res));
+        }
+
+        // If it's to book appointment, say something and book appointment at the same time, and then say something after booking is done
+        if (funcCall.funcName === "book_appointment") {
+          funcCall.arguments = JSON.parse(funcArguments);
+          const res: RetellResponse = {
+            response_id: request.response_id,
+            content: funcCall.arguments.message,
+            content_complete: false,
+            end_call: false,
+          };
+          ws.send(JSON.stringify(res));
+
+          // Sleep 2s to mimic the actual appointment booking
+          await new Promise((r) => setTimeout(r, 2000));
+          funcCall.result = "Appointment booked successfully";
+          this.DraftResponse(request, ws, funcCall);
         }
       } else {
         const res: RetellResponse = {
