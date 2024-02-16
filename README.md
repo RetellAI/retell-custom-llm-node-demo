@@ -5,7 +5,7 @@ live transcripts and other updates to the server, and get responses from this se
 
 The protocol of messages we send and expect to receive are documented [here](https://docs.retellai.com/api-references/llm-websocket).
 
-This repo also contains code to use Twilio to get number, make phone calls, see [API Docs](https://docs.re-tell.ai/guide/phone-setup) for walkthrough.
+This repo also contains code to use Twilio to get number, make phone calls, see [API Docs](https://docs.retellai.com/guide/phone-setup) for walkthrough.
 
 This repo contains `azure OpenAI` & `OpenAI`, modify the import inside `src/server.ts` to switch between two.
 

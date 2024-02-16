@@ -142,7 +142,7 @@ export class TwilioClient {
             const response = new VoiceResponse();
             const start = response.connect();
             const stream = start.stream({
-              url: `wss://api.re-tell.ai/audio-websocket/${callResponse.callDetail.callId}`,
+              url: `wss://api.retellai.com/audio-websocket/${callResponse.callDetail.callId}`,
             });
             res.set("Content-Type", "text/xml");
             res.send(response.toString());
