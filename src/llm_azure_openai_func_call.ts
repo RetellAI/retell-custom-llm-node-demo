@@ -248,13 +248,16 @@ export class FunctionCallingLlmClient {
           funcCall.arguments = JSON.parse(funcArguments);
           const res: RetellResponse = {
             response_id: request.response_id,
+            // LLM will return the function name along with the message property we define. In this case, "The message you will say while setting up the appointment like 'one moment'"
             content: funcCall.arguments.message,
+            // If content_complete is false, it means AI will speak later. In our case, agent will say something to confirm the appointment, so we set it to false
             content_complete: false,
             end_call: false,
           };
           ws.send(JSON.stringify(res));
 
           // Sleep 2s to mimic the actual appointment booking
+          // Replace with your actual making appointment functions
           await new Promise((r) => setTimeout(r, 2000));
           funcCall.result = "Appointment booked successfully";
           this.DraftResponse(request, ws, funcCall);
