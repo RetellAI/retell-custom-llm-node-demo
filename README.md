@@ -7,13 +7,13 @@ The protocol of messages we send and expect to receive are documented [here](htt
 
 This repo also contains code to use Twilio to get number, make phone calls, see [API Docs](https://docs.retellai.com/guide/phone-setup) for walkthrough.
 
-This repo contains `azure OpenAI` & `OpenAI`, modify the import inside `src/server.ts` to switch between two.
+This repo contains `azure OpenAI`, `OpenAI`, and [`OpenRouter`](https://openrouter.ai), modify the import inside `src/server.ts` to switch between which one to use.
 
-Check this [Youtube Toturial](https://youtu.be/Tz969io9cPc?feature=shared&t=344) containing a walkthrough using the [Frontend Demo](https://github.com/adam-team/retell-frontend-reactjs-demo/tree/client_sdk) and this repo.
+Check this [Youtube Tutorial](https://youtu.be/Tz969io9cPc?feature=shared&t=344) containing a walkthrough using the [Frontend Demo](https://github.com/adam-team/retell-frontend-reactjs-demo/tree/client_sdk) and this repo.
 
 ## Steps to run locally to test
 
-1. Add Retell and `Azure OpenAI` key to ".env.development". Optionally add your twilio credentials if you want to use phone call abilities here.
+1. Add Retell and `Azure OpenAI` key to ".env.development". Optionally add your twilio credentials if you want to use phone call abilities here. You can also add an OpenRouter API Key if you want to choose between tons of Open Source AI Models to use.
 
 2. Install dependencies
 
