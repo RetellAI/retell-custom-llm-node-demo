@@ -1,11 +1,11 @@
 # retell-backend-node-demo
 
-This backend repo demonstrates how to start a websocket server that Retell server will connect to. Retell will send
+This backend repo demonstrates how to start a WebSocket server that Retell server will connect to. Retell will send
 live transcripts and other updates to the server, and get responses from this server. see [API Docs](https://docs.retellai.com/guide/custom-llm-websocket) for walkthrough.
 
-The protocol of messages we send and expect to receive are documented [here](https://docs.retellai.com/api-references/llm-websocket).
+The protocol of messages we send and expect to receive is documented [here](https://docs.retellai.com/api-references/llm-websocket).
 
-This repo also contains code to use Twilio to get number, make phone calls, see [API Docs](https://docs.retellai.com/guide/phone-setup) for walkthrough.
+This repo also contains code to use Twilio to get numbers, set up inbound, make phone calls, see [API Docs](https://docs.retellai.com/guide/phone-setup) for a walkthrough.
 
 This repo contains `azure OpenAI`, `OpenAI`, and [`OpenRouter`](https://openrouter.ai), modify the import inside `src/server.ts` to switch between which one to use.
 
@@ -13,15 +13,19 @@ Check this [Youtube Tutorial](https://youtu.be/Tz969io9cPc?feature=shared&t=344)
 
 ## Steps to run locally to test
 
-1. Add Retell and `Azure OpenAI` key to ".env.development". Optionally add your twilio credentials if you want to use phone call abilities here. You can also add an OpenRouter API Key if you want to choose between tons of Open Source AI Models to use.
+1. Add Retell and your LLM API key (Azure OpenAI / OpenAI / OpenRouter) to ".env.development". Optionally add your Twilio credentials if you want to use phone call abilities here.
 
-2. Install dependencies
+   - Azure OpenAI is pretty fast and stable: [guide for setup](https://docs.retellai.com/guide/azure-open-ai)
+   - OpenAI is the most widely used one, although the latency can vary.
+   - OpenRouter allows you to choose between tons of Open Source AI Models.
+
+3. Install dependencies
 
 ```bash
 npm install
 ```
 
-3. In another bash, use ngrok to expose this port to public network
+3. In another bash, use ngrok to expose this port to the public network
 
 ```bash
 ngrok http 8080
@@ -47,7 +51,7 @@ The custom LLM URL would look like
 The `src/twilio_api.ts` contains helper functions you could utilize to create phone numbers, tie agent to a number,
 make a phone call with an agent, etc. Here we assume you already created agent from last step, and have agent id ready.
 
-To ues these features, follow these steps:
+To use these features, follow these steps:
 
 1. Uncomment twilio client initialization and `ListenTwilioVoiceWebhook(this.app)` in `src/server.ts` file to set up Twilio voice webhook. What this does is that every time a number of yours in Twilio get called, it would call this webhook which internally calls the `register-call` API and sends the correct audio websocket address back to Twilio, so it can connects with Retell to start the call.
 
@@ -68,4 +72,4 @@ To ues these features, follow these steps:
 ## Run in prod
 
 To run in prod, you probably want to customize your LLM solution, host the code
-in a cloud, and use that IP to create agent.
+in a cloud, and use that IP to create the agent.
