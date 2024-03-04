@@ -129,6 +129,8 @@ export class TwilioClient {
           if (answeredBy && answeredBy === "machine_start") {
             this.EndCall(req.body.CallSid);
             return;
+          } else if (answeredBy) {
+            return;
           }
 
           const callResponse = await this.retellClient.registerCall({
