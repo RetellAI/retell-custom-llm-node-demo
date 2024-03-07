@@ -18,7 +18,6 @@ import { RetellRequest } from "./types";
 export class Server {
   private httpServer: HTTPServer;
   public app: expressWs.Application;
-  private llmClient: FunctionCallingLlmClient;
   private retellClient: RetellClient;
   private twilioClient: TwilioClient;
 
@@ -31,8 +30,6 @@ export class Server {
 
     this.handleRetellLlmWebSocket();
     this.handleRegisterCallAPI();
-
-    this.llmClient = new FunctionCallingLlmClient();
 
     this.retellClient = new RetellClient({
       apiKey: process.env.RETELL_API_KEY,
@@ -80,8 +77,9 @@ export class Server {
         const callId = req.params.call_id;
         console.log("Handle llm ws for: ", callId);
 
+        const llmClient = new FunctionCallingLlmClient();
         // Start sending the begin message to signal the client is ready.
-        this.llmClient.BeginMessage(ws);
+        llmClient.BeginMessage(ws);
 
         ws.on("error", (err) => {
           console.error("Error received in LLM websocket client: ", err);
@@ -98,7 +96,7 @@ export class Server {
           }
           try {
             const request: RetellRequest = JSON.parse(data.toString());
-            this.llmClient.DraftResponse(request, ws);
+            llmClient.DraftResponse(request, ws);
           } catch (err) {
             console.error("Error in parsing LLM websocket message: ", err);
             ws.close(1002, "Cannot parse incoming message.");
