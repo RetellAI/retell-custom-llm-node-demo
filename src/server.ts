@@ -13,7 +13,7 @@ import {
 import { LLMDummyMock } from "./llm_dummy_mock";
 import { FunctionCallingLlmClient } from "./llm_azure_openai_func_call";
 import { RetellRequest } from "./types";
-// import { DemoLlmClient } from "./llm_openrouter";
+import { DemoLlmClient } from "./llm_openrouter";
 
 export class Server {
   private httpServer: HTTPServer;
@@ -77,7 +77,7 @@ export class Server {
         const callId = req.params.call_id;
         console.log("Handle llm ws for: ", callId);
 
-        const llmClient = new FunctionCallingLlmClient();
+        const llmClient = new DemoLlmClient();
         // Start sending the begin message to signal the client is ready.
         llmClient.BeginMessage(ws);
 
