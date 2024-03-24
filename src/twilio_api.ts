@@ -59,7 +59,7 @@ export class TwilioClient {
       }
 
       await this.twilio.incomingPhoneNumbers(numberSid).update({
-        voiceUrl: `${process.env.NGROK_IP_ADDRESS}/twilio-voice-webhook/${agentId}`,
+        voiceUrl: `https://retell-backend-node-demo-f5gv.onrender.com/twilio-voice-webhook/8c5a6492b60f1acaf461c292b50b5cdd`,
       });
     } catch (error: any) {
       console.error("failer to retrieve caller information: ", error);

@@ -35,8 +35,8 @@ export class Server {
       apiKey: process.env.RETELL_API_KEY,
     });
 
-    // this.twilioClient = new TwilioClient();
-    // this.twilioClient.ListenTwilioVoiceWebhook(this.app);
+    this.twilioClient = new TwilioClient();
+    this.twilioClient.ListenTwilioVoiceWebhook(this.app);
   }
 
   listen(port: number): void {
