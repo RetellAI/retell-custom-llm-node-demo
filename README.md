@@ -1,4 +1,4 @@
-# retell-backend-node-demo
+# retell-custom-llm-node-demo
 
 This backend repo demonstrates how to start a WebSocket server that Retell server will connect to. Retell will send
 live transcripts and other updates to the server, and get responses from this server. see [API Docs](https://docs.retellai.com/guide/custom-llm-websocket) for walkthrough.
