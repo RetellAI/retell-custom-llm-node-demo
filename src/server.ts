@@ -13,7 +13,7 @@ import {
 import { LLMDummyMock } from "./llm_dummy_mock";
 import { FunctionCallingLlmClient } from "./llm_azure_openai_func_call";
 import { RetellRequest } from "./types";
-import { DemoLlmClient } from "./llm_openrouter";
+import { DemoLlmClient } from "./llm_openai";
 
 export class Server {
   private httpServer: HTTPServer;
@@ -70,7 +70,7 @@ export class Server {
       },
     );
   }
-
+  // this has been added as a simple outbound procedure
   handleCreatePhoneCall() {
     this.app.post("/create-phone-call", async (req: Request, res: Response) => {
       const { fromNumber, toNumber, agentId } = req.body;
