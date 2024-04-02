@@ -10,8 +10,8 @@ import {
   AudioWebsocketProtocol,
   AudioEncoding,
 } from "retell-sdk/models/components";
-import { LLMDummyMock } from "./llm_dummy_mock";
-import { FunctionCallingLlmClient } from "./llm_azure_openai_func_call";
+// import { LLMDummyMock } from "./llm_dummy_mock";
+// import { FunctionCallingLlmClient } from "./llm_azure_openai_func_call";
 import { RetellRequest } from "./types";
 import { DemoLlmClient } from "./llm_openai";
 
@@ -59,6 +59,7 @@ export class Server {
             audioWebsocketProtocol: AudioWebsocketProtocol.Web,
             audioEncoding: AudioEncoding.S16le,
             sampleRate: 24000,
+            endCallAfterSilenceMs: 20000,
           });
           // Send back the successful response to the client
           res.json(callResponse.callDetail);
