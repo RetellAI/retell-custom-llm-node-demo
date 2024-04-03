@@ -58,7 +58,7 @@ export class Server {
             audioWebsocketProtocol: AudioWebsocketProtocol.Web,
             audioEncoding: AudioEncoding.S16le,
             sampleRate: 24000,
-            endCallAfterSilenceMs: 20000,
+            endCallAfterSilenceMs: 60000,
           });
           // Send back the successful response to the client
           res.json(callResponse.callDetail);
