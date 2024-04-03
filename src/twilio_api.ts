@@ -2,24 +2,19 @@ import { Request, Response } from "express";
 import VoiceResponse from "twilio/lib/twiml/VoiceResponse";
 import expressWs from "express-ws";
 import twilio, { Twilio } from "twilio";
-import { RetellClient } from "retell-sdk";
-import {
-  AudioWebsocketProtocol,
-  AudioEncoding,
-} from "retell-sdk/models/components";
+import Retell from "retell-sdk";
+import { RegisterCallResponse } from "retell-sdk/resources";
 
 export class TwilioClient {
   private twilio: Twilio;
-  private retellClient: RetellClient;
+  private retellClient: Retell;
 
-  constructor() {
+  constructor(retellClient: Retell) {
     this.twilio = twilio(
       process.env.TWILIO_ACCOUNT_ID,
       process.env.TWILIO_AUTH_TOKEN,
     );
-    this.retellClient = new RetellClient({
-      apiKey: process.env.RETELL_API_KEY,
-    });
+    this.retellClient = retellClient;
   }
 
   // Create a new phone number and route it to use this server.
@@ -122,8 +117,8 @@ export class TwilioClient {
     app.post(
       "/twilio-voice-webhook/:agent_id",
       async (req: Request, res: Response) => {
-        const agentId = req.params.agent_id;
-        const answeredBy = req.body.AnsweredBy;
+        const agent_id = req.params.agent_id;
+        const { answeredBy, from, to, callSid } = req.body.AnsweredBy;
         try {
           // Respond with TwiML to hang up the call if its machine
           if (answeredBy && answeredBy === "machine_start") {
@@ -133,18 +128,22 @@ export class TwilioClient {
             return;
           }
 
-          const callResponse = await this.retellClient.registerCall({
-            agentId: agentId,
-            audioWebsocketProtocol: AudioWebsocketProtocol.Twilio,
-            audioEncoding: AudioEncoding.Mulaw,
-            sampleRate: 8000,
-          });
-          if (callResponse.callDetail) {
+          const callResponse: RegisterCallResponse =
+            await this.retellClient.call.register({
+              agent_id: agent_id,
+              audio_websocket_protocol: "twilio",
+              audio_encoding: "s16le",
+              sample_rate: 8000,
+              from_number: from,
+              to_number: to,
+              metadata: { twilio_call_sid: callSid },
+            });
+          if (callResponse) {
             // Start phone call websocket
             const response = new VoiceResponse();
             const start = response.connect();
             const stream = start.stream({
-              url: `wss://api.retellai.com/audio-websocket/${callResponse.callDetail.callId}`,
+              url: `wss://api.retellai.com/audio-websocket/${callResponse.call_id}`,
             });
             res.set("Content-Type", "text/xml");
             res.send(response.toString());

@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { WebSocket } from "ws";
-import { RetellRequest, RetellResponse, Utterance } from "./types";
+import { CustomLlmRequest, CustomLlmResponse, Utterance } from "../types";
 
 // Define the greeting message of the agent. If you don't want the agent speak first, set to empty string ""
 const beginSentence =
@@ -14,14 +14,14 @@ export class DemoLlmClient {
 
   constructor() {
     this.client = new OpenAI({
-      apiKey: process.env.OPENAI_APIKEY,
-      organization: process.env.OPENAI_ORGANIZATION_ID,
+      baseURL: "https://openrouter.ai/api/v1",
+      apiKey: process.env.OPENROUTER_API_KEY,
     });
   }
 
   // First sentence requested
   BeginMessage(ws: WebSocket) {
-    const res: RetellResponse = {
+    const res: CustomLlmResponse = {
       response_id: 0,
       content: beginSentence,
       content_complete: true,
@@ -46,7 +46,7 @@ export class DemoLlmClient {
     return result;
   }
 
-  private PreparePrompt(request: RetellRequest) {
+  private PreparePrompt(request: CustomLlmRequest) {
     let transcript = this.ConversationToChatRequestMessages(request.transcript);
     let requestMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] =
       [
@@ -71,31 +71,27 @@ export class DemoLlmClient {
     return requestMessages;
   }
 
-  async DraftResponse(request: RetellRequest, ws: WebSocket) {
-    console.clear();
-
-    if (request.interaction_type === "update_only") {
-      // process live transcript update if needed
-      return;
-    }
+  async DraftResponse(request: CustomLlmRequest, ws: WebSocket) {
     const requestMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] =
       this.PreparePrompt(request);
 
     try {
       const events = await this.client.chat.completions.create({
-        model: "gpt-3.5-turbo-1106",
+        model: "mistralai/mixtral-8x7b-instruct",
         messages: requestMessages,
         stream: true,
-        temperature: 0.3,
-        frequency_penalty: 1,
+        temperature: 0.9,
+        frequency_penalty: 0.7,
         max_tokens: 200,
+        top_p: 1,
+        presence_penalty: 0.7,
       });
 
       for await (const event of events) {
         if (event.choices.length >= 1) {
           let delta = event.choices[0].delta;
           if (!delta || !delta.content) continue;
-          const res: RetellResponse = {
+          const res: CustomLlmResponse = {
             response_id: request.response_id,
             content: delta.content,
             content_complete: false,
@@ -107,7 +103,7 @@ export class DemoLlmClient {
     } catch (err) {
       console.error("Error in gpt stream: ", err);
     } finally {
-      const res: RetellResponse = {
+      const res: CustomLlmResponse = {
         response_id: request.response_id,
         content: "",
         content_complete: true,

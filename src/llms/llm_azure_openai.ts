@@ -5,7 +5,7 @@ import {
   GetChatCompletionsOptions,
 } from "@azure/openai";
 import { WebSocket } from "ws";
-import { RetellRequest, RetellResponse, Utterance } from "./types";
+import { CustomLlmRequest, CustomLlmResponse, Utterance } from "../types";
 
 const beginSentence =
   "Hey there, I'm your personal AI therapist, how can I help you?";
@@ -24,7 +24,7 @@ export class DemoLlmClient {
 
   // First sentence requested
   BeginMessage(ws: WebSocket) {
-    const res: RetellResponse = {
+    const res: CustomLlmResponse = {
       response_id: 0,
       content: beginSentence,
       content_complete: true,
@@ -44,7 +44,7 @@ export class DemoLlmClient {
     return result;
   }
 
-  private PreparePrompt(request: RetellRequest) {
+  private PreparePrompt(request: CustomLlmRequest) {
     let transcript = this.ConversationToChatRequestMessages(request.transcript);
     let requestMessages: ChatRequestMessage[] = [
       {
@@ -66,14 +66,7 @@ export class DemoLlmClient {
     return requestMessages;
   }
 
-  async DraftResponse(request: RetellRequest, ws: WebSocket) {
-    console.clear();
-    console.log("req", request);
-
-    if (request.interaction_type === "update_only") {
-      // process live transcript update if needed
-      return;
-    }
+  async DraftResponse(request: CustomLlmRequest, ws: WebSocket) {
     const requestMessages: ChatRequestMessage[] = this.PreparePrompt(request);
 
     const option: GetChatCompletionsOptions = {
@@ -93,7 +86,7 @@ export class DemoLlmClient {
         if (event.choices.length >= 1) {
           let delta = event.choices[0].delta;
           if (!delta || !delta.content) continue;
-          const res: RetellResponse = {
+          const res: CustomLlmResponse = {
             response_id: request.response_id,
             content: delta.content,
             content_complete: false,
@@ -106,7 +99,7 @@ export class DemoLlmClient {
       console.error("Error in gpt stream: ", err);
     } finally {
       // Send a content complete no matter if error or not.
-      const res: RetellResponse = {
+      const res: CustomLlmResponse = {
         response_id: request.response_id,
         content: "",
         content_complete: true,

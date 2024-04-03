@@ -1,12 +1,12 @@
 import { WebSocket } from "ws";
-import { RetellRequest, RetellResponse } from "./types";
+import { CustomLlmRequest, CustomLlmResponse } from "../types";
 
 export class LLMDummyMock {
   constructor() {}
 
   // First sentence requested
   BeginMessage(ws: WebSocket) {
-    const res: RetellResponse = {
+    const res: CustomLlmResponse = {
       response_id: 0,
       content: "How may I help you?",
       content_complete: true,
@@ -15,16 +15,9 @@ export class LLMDummyMock {
     ws.send(JSON.stringify(res));
   }
 
-  async DraftResponse(request: RetellRequest, ws: WebSocket) {
-    console.clear();
-    console.log("req", request);
-    if (request.interaction_type === "update_only") {
-      // process live transcript update if needed
-      return;
-    }
-
+  async DraftResponse(request: CustomLlmRequest, ws: WebSocket) {
     try {
-      const res: RetellResponse = {
+      const res: CustomLlmResponse = {
         response_id: request.response_id,
         content: "I am sorry, can you say that again?",
         content_complete: true,

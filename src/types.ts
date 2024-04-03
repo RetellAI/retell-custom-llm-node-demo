@@ -3,13 +3,13 @@ export interface Utterance {
   content: string;
 }
 
-export interface RetellRequest {
+export interface CustomLlmRequest {
   response_id?: number;
   transcript: Utterance[];
   interaction_type: "update_only" | "response_required" | "reminder_required";
 }
 
-export interface RetellResponse {
+export interface CustomLlmResponse {
   response_id: number;
   content: string;
   content_complete: boolean;

@@ -6,7 +6,7 @@ import {
   ChatCompletionsFunctionToolDefinition,
 } from "@azure/openai";
 import { WebSocket } from "ws";
-import { RetellRequest, RetellResponse, Utterance } from "./types";
+import { CustomLlmRequest, CustomLlmResponse, Utterance } from "../types";
 
 //Step 1: Define the structure to parse openAI function calling result to our data model
 export interface FunctionCall {
@@ -33,7 +33,7 @@ export class FunctionCallingLlmClient {
 
   // First sentence requested
   BeginMessage(ws: WebSocket) {
-    const res: RetellResponse = {
+    const res: CustomLlmResponse = {
       response_id: 0,
       content: beginSentence,
       content_complete: true,
@@ -53,7 +53,7 @@ export class FunctionCallingLlmClient {
     return result;
   }
 
-  private PreparePrompt(request: RetellRequest, funcResult?: FunctionCall) {
+  private PreparePrompt(request: CustomLlmRequest, funcResult?: FunctionCall) {
     let transcript = this.ConversationToChatRequestMessages(request.transcript);
     let requestMessages: ChatRequestMessage[] = [
       {
@@ -153,18 +153,10 @@ export class FunctionCallingLlmClient {
   }
 
   async DraftResponse(
-    request: RetellRequest,
+    request: CustomLlmRequest,
     ws: WebSocket,
     funcResult?: FunctionCall,
   ) {
-    console.clear();
-    console.log("req", request);
-
-    if (request.interaction_type === "update_only") {
-      // process live transcript update if needed
-      return;
-    }
-
     // If there are function call results, add it to prompt here.
     const requestMessages: ChatRequestMessage[] = this.PreparePrompt(
       request,
@@ -215,7 +207,7 @@ export class FunctionCallingLlmClient {
               funcArguments += toolCall.function?.arguments || "";
             }
           } else if (delta.content) {
-            const res: RetellResponse = {
+            const res: CustomLlmResponse = {
               response_id: request.response_id,
               content: delta.content,
               content_complete: false,
@@ -234,7 +226,7 @@ export class FunctionCallingLlmClient {
         // If it's to end the call, simply send a last message and end the call
         if (funcCall.funcName === "end_call") {
           funcCall.arguments = JSON.parse(funcArguments);
-          const res: RetellResponse = {
+          const res: CustomLlmResponse = {
             response_id: request.response_id,
             content: funcCall.arguments.message,
             content_complete: true,
@@ -246,7 +238,7 @@ export class FunctionCallingLlmClient {
         // If it's to book appointment, say something and book appointment at the same time, and then say something after booking is done
         if (funcCall.funcName === "book_appointment") {
           funcCall.arguments = JSON.parse(funcArguments);
-          const res: RetellResponse = {
+          const res: CustomLlmResponse = {
             response_id: request.response_id,
             // LLM will return the function name along with the message property we define. In this case, "The message you will say while setting up the appointment like 'one moment'"
             content: funcCall.arguments.message,
@@ -263,7 +255,7 @@ export class FunctionCallingLlmClient {
           this.DraftResponse(request, ws, funcCall);
         }
       } else {
-        const res: RetellResponse = {
+        const res: CustomLlmResponse = {
           response_id: request.response_id,
           content: "",
           content_complete: true,
