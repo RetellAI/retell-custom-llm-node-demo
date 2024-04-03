@@ -3,15 +3,14 @@ import { RawData, WebSocket } from "ws";
 import { createServer, Server as HTTPServer } from "http";
 import cors from "cors";
 import expressWs from "express-ws";
-// import { DemoLlmClient } from "./llm_azure_openai";
+
 import { TwilioClient } from "./twilio_api";
 import { RetellClient } from "retell-sdk";
 import {
   AudioWebsocketProtocol,
   AudioEncoding,
 } from "retell-sdk/models/components";
-// import { LLMDummyMock } from "./llm_dummy_mock";
-// import { FunctionCallingLlmClient } from "./llm_azure_openai_func_call";
+
 import { RetellRequest } from "./types";
 import { DemoLlmClient } from "./llm_openai";
 
