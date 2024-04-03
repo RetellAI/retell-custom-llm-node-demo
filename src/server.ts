@@ -97,7 +97,7 @@ export class Server {
           }
           try {
             const request: CustomLlmRequest = JSON.parse(data.toString());
-            // console.clear();
+            console.clear();
             console.log("req", request);
 
             // There are 3 types of interaction_type: update_only, response_required, and reminder_required.
