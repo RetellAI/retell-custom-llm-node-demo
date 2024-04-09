@@ -5,9 +5,11 @@ import cors from "cors";
 import expressWs from "express-ws";
 import { TwilioClient } from "./twilio_api";
 import { Retell } from "retell-sdk";
-import { CallResponse, RegisterCallResponse } from "retell-sdk/resources/call";
-import { CustomLlmRequest } from "./types";
-import { FunctionCallingLlmClient } from "./llms/llm_azure_openai_func_call";
+import { RegisterCallResponse } from "retell-sdk/resources/call";
+import { CustomLlmRequest, CustomLlmResponse } from "./types";
+import { FunctionCallingLlmClient } from "./llms/llm_azure_openai_func_call_end_call";
+// import { FunctionCallingLlmClient } from "./llms/llm_azure_openai_func_call";
+// import { FunctionCallingLlmClient } from "./llms/llm_openai_func_call";
 // import { DemoLlmClient } from "./llms/llm_azure_openai";
 // import { DemoLlmClient } from "./llms/llm_openrouter";
 
@@ -33,6 +35,11 @@ export class Server {
 
     this.twilioClient = new TwilioClient(this.retellClient);
     this.twilioClient.ListenTwilioVoiceWebhook(this.app);
+    // this.twilioClient.CreatePhoneCall(
+    //   "+14157122917",
+    //   "+14157122912",
+    //   "68978b1c29f5ff9c7d7e07e61124d0bb",
+    // );
   }
 
   listen(port: number): void {
@@ -73,42 +80,64 @@ export class Server {
       async (ws: WebSocket, req: Request) => {
         const callId = req.params.call_id;
         console.log("Handle llm ws for: ", callId);
-        const call: CallResponse = await this.retellClient.call.retrieve(
-          callId,
-        );
-        console.log(call);
 
-        const llmClient = new FunctionCallingLlmClient();
+        const timeoutId = setTimeout(() => {
+          if (ws) ws.close(1002, "Timeout after 60 seconds");
+        }, 1000 * 60);
+
+        // Send config to Retell server
+        const config: CustomLlmResponse = {
+          response_type: "config",
+          content: {
+            auto_reconnect: true,
+            call_details: true,
+          },
+          response_id: 0,
+          content_complete: true,
+          end_call: false,
+        };
+        ws.send(JSON.stringify(config));
+
         // Start sending the begin message to signal the client is ready.
+        const llmClient = new FunctionCallingLlmClient();
         llmClient.BeginMessage(ws);
 
         ws.on("error", (err) => {
           console.error("Error received in LLM websocket client: ", err);
         });
         ws.on("close", (err) => {
+          clearTimeout(timeoutId);
           console.error("Closing llm ws for: ", callId);
         });
 
         ws.on("message", async (data: RawData, isBinary: boolean) => {
-          console.log(data.toString());
           if (isBinary) {
             console.error("Got binary message instead of text in websocket.");
             ws.close(1002, "Cannot find corresponding Retell LLM.");
           }
           try {
             const request: CustomLlmRequest = JSON.parse(data.toString());
-            console.clear();
-            console.log("req", request);
 
-            // There are 3 types of interaction_type: update_only, response_required, and reminder_required.
+            // There are 5 types of interaction_type: call_details, pingpong, update_only, response_required, and reminder_required.
             // Not all of them need to be handled, only response_required and reminder_required.
-            if (request.interaction_type === "update_only") {
+            if (request.interaction_type === "pingpong") {
+              ws.send(
+                JSON.stringify({
+                  response_type: "pingpong",
+                  content: request.content,
+                }),
+              );
+            } else if (request.interaction_type === "call_details") {
+              console.log("call details: ", request.content);
+              // print call detailes
+            } else if (request.interaction_type === "update_only") {
               // process live transcript update if needed
-              return;
             } else if (
               request.interaction_type === "reminder_required" ||
               request.interaction_type === "response_required"
             ) {
+              console.clear();
+              console.log("req", request);
               llmClient.DraftResponse(request, ws);
             }
           } catch (err) {

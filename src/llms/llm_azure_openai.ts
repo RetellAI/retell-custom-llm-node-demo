@@ -25,6 +25,7 @@ export class DemoLlmClient {
   // First sentence requested
   BeginMessage(ws: WebSocket) {
     const res: CustomLlmResponse = {
+      response_type: "response",
       response_id: 0,
       content: beginSentence,
       content_complete: true,
@@ -87,6 +88,7 @@ export class DemoLlmClient {
           let delta = event.choices[0].delta;
           if (!delta || !delta.content) continue;
           const res: CustomLlmResponse = {
+            response_type: "response",
             response_id: request.response_id,
             content: delta.content,
             content_complete: false,
@@ -100,6 +102,7 @@ export class DemoLlmClient {
     } finally {
       // Send a content complete no matter if error or not.
       const res: CustomLlmResponse = {
+        response_type: "response",
         response_id: request.response_id,
         content: "",
         content_complete: true,

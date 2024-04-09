@@ -22,6 +22,7 @@ export class DemoLlmClient {
   // First sentence requested
   BeginMessage(ws: WebSocket) {
     const res: CustomLlmResponse = {
+      response_type: "response",
       response_id: 0,
       content: beginSentence,
       content_complete: true,
@@ -92,6 +93,7 @@ export class DemoLlmClient {
           let delta = event.choices[0].delta;
           if (!delta || !delta.content) continue;
           const res: CustomLlmResponse = {
+            response_type: "response",
             response_id: request.response_id,
             content: delta.content,
             content_complete: false,
@@ -104,6 +106,7 @@ export class DemoLlmClient {
       console.error("Error in gpt stream: ", err);
     } finally {
       const res: CustomLlmResponse = {
+        response_type: "response",
         response_id: request.response_id,
         content: "",
         content_complete: true,

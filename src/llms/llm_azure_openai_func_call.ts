@@ -6,15 +6,12 @@ import {
   ChatCompletionsFunctionToolDefinition,
 } from "@azure/openai";
 import { WebSocket } from "ws";
-import { CustomLlmRequest, CustomLlmResponse, Utterance } from "../types";
-
-//Step 1: Define the structure to parse openAI function calling result to our data model
-export interface FunctionCall {
-  id: string;
-  funcName: string;
-  arguments: Record<string, any>;
-  result?: string;
-}
+import {
+  CustomLlmRequest,
+  CustomLlmResponse,
+  FunctionCall,
+  Utterance,
+} from "../types";
 
 const beginSentence =
   "Hey there, I'm your personal AI therapist, how can I help you?";
@@ -34,6 +31,7 @@ export class FunctionCallingLlmClient {
   // First sentence requested
   BeginMessage(ws: WebSocket) {
     const res: CustomLlmResponse = {
+      response_type: "response",
       response_id: 0,
       content: beginSentence,
       content_complete: true,
@@ -208,6 +206,7 @@ export class FunctionCallingLlmClient {
             }
           } else if (delta.content) {
             const res: CustomLlmResponse = {
+              response_type: "response",
               response_id: request.response_id,
               content: delta.content,
               content_complete: false,
@@ -227,6 +226,7 @@ export class FunctionCallingLlmClient {
         if (funcCall.funcName === "end_call") {
           funcCall.arguments = JSON.parse(funcArguments);
           const res: CustomLlmResponse = {
+            response_type: "response",
             response_id: request.response_id,
             content: funcCall.arguments.message,
             content_complete: true,
@@ -239,6 +239,7 @@ export class FunctionCallingLlmClient {
         if (funcCall.funcName === "book_appointment") {
           funcCall.arguments = JSON.parse(funcArguments);
           const res: CustomLlmResponse = {
+            response_type: "response",
             response_id: request.response_id,
             // LLM will return the function name along with the message property we define. In this case, "The message you will say while setting up the appointment like 'one moment'"
             content: funcCall.arguments.message,
@@ -256,6 +257,7 @@ export class FunctionCallingLlmClient {
         }
       } else {
         const res: CustomLlmResponse = {
+          response_type: "response",
           response_id: request.response_id,
           content: "",
           content_complete: true,

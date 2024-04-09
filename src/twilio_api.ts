@@ -118,13 +118,13 @@ export class TwilioClient {
       "/twilio-voice-webhook/:agent_id",
       async (req: Request, res: Response) => {
         const agent_id = req.params.agent_id;
-        const { answeredBy, from, to, callSid } = req.body.AnsweredBy;
+        const { AnsweredBy, from, to, callSid } = req.body;
         try {
-          // Respond with TwiML to hang up the call if its machine
-          if (answeredBy && answeredBy === "machine_start") {
+          // Respond with TwiML to hang up the call if its machine)
+          if (AnsweredBy && AnsweredBy === "machine_start") {
             this.EndCall(req.body.CallSid);
             return;
-          } else if (answeredBy) {
+          } else if (AnsweredBy) {
             return;
           }
 
@@ -132,7 +132,7 @@ export class TwilioClient {
             await this.retellClient.call.register({
               agent_id: agent_id,
               audio_websocket_protocol: "twilio",
-              audio_encoding: "s16le",
+              audio_encoding: "mulaw",
               sample_rate: 8000,
               from_number: from,
               to_number: to,

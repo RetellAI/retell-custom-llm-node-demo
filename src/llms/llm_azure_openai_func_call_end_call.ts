@@ -6,32 +6,12 @@ import {
   ChatCompletionsFunctionToolDefinition,
 } from "@azure/openai";
 import { WebSocket } from "ws";
-
-interface Utterance {
-  role: "agent" | "user";
-  content: string;
-}
-
-export interface CustomLlmRequest {
-  response_id?: number;
-  transcript: Utterance[];
-  interaction_type: "update_only" | "response_required" | "reminder_required";
-}
-
-export interface CustomLlmResponse {
-  response_id?: number;
-  content: string;
-  content_complete: boolean;
-  end_call: boolean;
-}
-
-//Step 1: Define the structure to parse openAI function calling result to our data model
-export interface FunctionCall {
-  id: string;
-  funcName: string;
-  arguments: Record<string, any>;
-  result?: string;
-}
+import {
+  CustomLlmRequest,
+  CustomLlmResponse,
+  FunctionCall,
+  Utterance,
+} from "../types";
 
 const beginSentence =
   "Hey there, I'm your personal AI therapist, how can I help you?";
@@ -51,6 +31,7 @@ export class FunctionCallingLlmClient {
   // First sentence requested
   BeginMessage(ws: WebSocket) {
     const res: CustomLlmResponse = {
+      response_type: "response",
       response_id: 0,
       content: beginSentence,
       content_complete: true,
@@ -164,6 +145,7 @@ export class FunctionCallingLlmClient {
             }
           } else if (delta.content) {
             const res: CustomLlmResponse = {
+              response_type: "response",
               response_id: request.response_id,
               content: delta.content,
               content_complete: false,
@@ -181,6 +163,7 @@ export class FunctionCallingLlmClient {
         if (funcCall.funcName === "end_call") {
           funcCall.arguments = JSON.parse(funcArguments);
           const res: CustomLlmResponse = {
+            response_type: "response",
             response_id: request.response_id,
             content: funcCall.arguments.message,
             content_complete: true,
@@ -190,6 +173,7 @@ export class FunctionCallingLlmClient {
         }
       } else {
         const res: CustomLlmResponse = {
+          response_type: "response",
           response_id: request.response_id,
           content: "",
           content_complete: true,

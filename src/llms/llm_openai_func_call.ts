@@ -1,28 +1,11 @@
 import OpenAI from "openai";
 import { WebSocket } from "ws";
-import { CustomLlmRequest, CustomLlmResponse, Utterance } from "../types";
-
-// Step 1: Define the structure to parse OpenAI's function calling result to our data model
-export interface function_call {
-  id: string;
-  funcName: string;
-  arguments: Record<string, unknown>;
-  result?: string;
-}
-
-/*
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- */
+import {
+  CustomLlmRequest,
+  CustomLlmResponse,
+  FunctionCall,
+  Utterance,
+} from "../types";
 
 const beginSentence = `Hey there, I'm your personal AI therapist, how can I help you`;
 
@@ -106,13 +89,14 @@ export class FunctionCallingLlmClient {
 
   constructor() {
     this.client = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+      apiKey: process.env.OPENAI_APIKEY,
     });
   }
 
   // First sentence requested
   BeginMessage(ws: WebSocket) {
     const res: CustomLlmResponse = {
+      response_type: "response",
       response_id: 0,
       content: beginSentence,
       content_complete: true,
@@ -132,7 +116,7 @@ export class FunctionCallingLlmClient {
     return result;
   }
 
-  private PreparePrompt(request: CustomLlmRequest, funcResult?: function_call) {
+  private PreparePrompt(request: CustomLlmRequest, funcResult?: FunctionCall) {
     const transcript = this.ConversationToChatRequestMessages(
       request.transcript,
     );
@@ -187,13 +171,13 @@ export class FunctionCallingLlmClient {
   async DraftResponse(
     request: CustomLlmRequest,
     ws: WebSocket,
-    funcResult?: function_call,
+    funcResult?: FunctionCall,
   ) {
     // If there are function call results, add it to prompt here.
     const requestMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] =
       this.PreparePrompt(request, funcResult);
 
-    let funcCall: function_call | undefined;
+    let funcCall: FunctionCall | undefined;
     let funcArguments = "";
 
     try {
@@ -282,6 +266,7 @@ export class FunctionCallingLlmClient {
             }
           } else if (delta.content) {
             const res: CustomLlmResponse = {
+              response_type: "response",
               response_id: request.response_id,
               content: delta.content,
               content_complete: false,
@@ -301,6 +286,7 @@ export class FunctionCallingLlmClient {
         if (funcCall.funcName === "end_call") {
           funcCall.arguments = JSON.parse(funcArguments);
           const res: CustomLlmResponse = {
+            response_type: "response",
             response_id: request.response_id,
             content: funcCall.arguments.message,
             content_complete: true,
@@ -314,6 +300,7 @@ export class FunctionCallingLlmClient {
         if (funcCall.funcName === "book_appointment") {
           funcCall.arguments = JSON.parse(funcArguments);
           const res: CustomLlmResponse = {
+            response_type: "response",
             response_id: request.response_id,
             // LLM will resturn the function name along with the message property we define
             // In this case, "The message you will say while setting up the appointment like 'one moment' "
@@ -333,6 +320,7 @@ export class FunctionCallingLlmClient {
         }
       } else {
         const res: CustomLlmResponse = {
+          response_type: "response",
           response_id: request.response_id,
           content: "",
           content_complete: true,
