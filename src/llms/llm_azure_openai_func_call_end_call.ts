@@ -10,6 +10,8 @@ import {
   CustomLlmRequest,
   CustomLlmResponse,
   FunctionCall,
+  ReminderRequiredRequest,
+  ResponseRequiredRequest,
   Utterance,
 } from "../types";
 
@@ -51,7 +53,9 @@ export class FunctionCallingLlmClient {
     return result;
   }
 
-  private PreparePrompt(request: CustomLlmRequest) {
+  private PreparePrompt(
+    request: ResponseRequiredRequest | ReminderRequiredRequest,
+  ) {
     let transcript = this.ConversationToChatRequestMessages(request.transcript);
     let requestMessages: ChatRequestMessage[] = [
       {
@@ -98,7 +102,10 @@ export class FunctionCallingLlmClient {
     return functions;
   }
 
-  async DraftResponse(request: CustomLlmRequest, ws: WebSocket) {
+  async DraftResponse(
+    request: ResponseRequiredRequest | ReminderRequiredRequest,
+    ws: WebSocket,
+  ) {
     const requestMessages: ChatRequestMessage[] = this.PreparePrompt(request);
 
     const option: GetChatCompletionsOptions = {

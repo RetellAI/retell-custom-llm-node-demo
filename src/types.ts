@@ -3,28 +3,82 @@ export interface Utterance {
   content: string;
 }
 
-export interface CustomLlmRequest {
-  interaction_type:
-    | "update_only"
-    | "response_required"
-    | "reminder_required"
-    | "ping_pong"
-    | "call_details";
-  response_id?: number; // Used by update_only and response_required
-  transcript?: Utterance[]; // Used by update_only and response_required
-  call?: any; // Used by call_details
-  timestamp?: number; // Used by ping_pong
+// Retell -> Your Server Events
+interface PingPongRequest {
+  interaction_type: "ping_pong";
+  timestamp: number;
 }
 
-export interface CustomLlmResponse {
-  response_type: "response" | "config" | "ping_pong";
-  response_id?: number; // Used by response
-  content?: any; // Used by response
-  content_complete?: boolean; // Used by response
-  end_call?: boolean; // Used by response
-  config?: any; // Used by config
-  timestamp?: number; // Used by ping_pong
+interface CallDetailsRequest {
+  interaction_type: "call_details";
+  call: any;
 }
+
+interface UpdateOnlyRequest {
+  interaction_type: "update_only";
+  transcript: Utterance[];
+  turntaking?: "agent_turn" | "user_turn";
+}
+
+export interface ResponseRequiredRequest {
+  interaction_type: "response_required";
+  transcript: Utterance[];
+  response_id: number;
+}
+
+export interface ReminderRequiredRequest {
+  interaction_type: "reminder_required";
+  transcript: Utterance[];
+  response_id: number;
+}
+
+export type CustomLlmRequest =
+  | PingPongRequest
+  | CallDetailsRequest
+  | UpdateOnlyRequest
+  | ResponseRequiredRequest
+  | ReminderRequiredRequest;
+
+// Your Server -> Retell Events
+
+interface ConfigResponse {
+  response_type: "config";
+  config: {
+    auto_reconnect: boolean;
+    call_details: boolean;
+  };
+}
+
+interface PingPongResponse {
+  response_type: "ping_pong";
+  timestamp: number;
+}
+
+interface ResponseResponse {
+  response_type: "response";
+  response_id: number;
+  content: string;
+  content_complete: boolean;
+  no_interruption_allowed?: boolean;
+  end_call?: boolean;
+  transfer_number?: string;
+}
+
+interface AgentInterruptResponse {
+  response_type: "agent_interrupt";
+  interrupt_id: number;
+  content: string;
+  content_complete: boolean;
+  no_interruption_allowed?: boolean;
+  end_call?: boolean;
+  transfer_number?: string;
+}
+
+export type CustomLlmResponse =
+  | ConfigResponse
+  | PingPongResponse
+  | ResponseResponse
+  | AgentInterruptResponse;
 
 export interface FunctionCall {
   id: string;

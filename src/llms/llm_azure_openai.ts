@@ -5,7 +5,13 @@ import {
   GetChatCompletionsOptions,
 } from "@azure/openai";
 import { WebSocket } from "ws";
-import { CustomLlmRequest, CustomLlmResponse, Utterance } from "../types";
+import {
+  CustomLlmRequest,
+  CustomLlmResponse,
+  ReminderRequiredRequest,
+  ResponseRequiredRequest,
+  Utterance,
+} from "../types";
 
 const beginSentence =
   "Hey there, I'm your personal AI therapist, how can I help you?";
@@ -45,7 +51,9 @@ export class DemoLlmClient {
     return result;
   }
 
-  private PreparePrompt(request: CustomLlmRequest) {
+  private PreparePrompt(
+    request: ResponseRequiredRequest | ReminderRequiredRequest,
+  ) {
     let transcript = this.ConversationToChatRequestMessages(request.transcript);
     let requestMessages: ChatRequestMessage[] = [
       {
@@ -67,7 +75,10 @@ export class DemoLlmClient {
     return requestMessages;
   }
 
-  async DraftResponse(request: CustomLlmRequest, ws: WebSocket) {
+  async DraftResponse(
+    request: ResponseRequiredRequest | ReminderRequiredRequest,
+    ws: WebSocket,
+  ) {
     const requestMessages: ChatRequestMessage[] = this.PreparePrompt(request);
 
     const option: GetChatCompletionsOptions = {
