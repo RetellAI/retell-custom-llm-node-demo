@@ -78,57 +78,54 @@ export class Server {
     this.app.ws(
       "/llm-websocket/:call_id",
       async (ws: WebSocket, req: Request) => {
-        const callId = req.params.call_id;
-        console.log("Handle llm ws for: ", callId);
+        try {
+          const callId = req.params.call_id;
+          console.log("Handle llm ws for: ", callId);
 
-        const timeoutId = setTimeout(() => {
-          if (ws) ws.close(1002, "Timeout after 60 seconds");
-        }, 1000 * 60);
+          const timeoutId = setTimeout(() => {
+            if (ws) ws.close(1002, "Timeout after 60 seconds");
+          }, 1000 * 60);
 
-        // Send config to Retell server
-        const config: CustomLlmResponse = {
-          response_type: "config",
-          content: {
-            auto_reconnect: true,
-            call_details: true,
-          },
-          response_id: 0,
-          content_complete: true,
-          end_call: false,
-        };
-        ws.send(JSON.stringify(config));
+          // Send config to Retell server
+          const config: CustomLlmResponse = {
+            response_type: "config",
+            config: {
+              auto_reconnect: true,
+              call_details: true,
+            },
+          };
+          ws.send(JSON.stringify(config));
 
-        // Start sending the begin message to signal the client is ready.
-        const llmClient = new FunctionCallingLlmClient();
-        llmClient.BeginMessage(ws);
+          // Start sending the begin message to signal the client is ready.
+          const llmClient = new FunctionCallingLlmClient();
+          llmClient.BeginMessage(ws);
 
-        ws.on("error", (err) => {
-          console.error("Error received in LLM websocket client: ", err);
-        });
-        ws.on("close", (err) => {
-          clearTimeout(timeoutId);
-          console.error("Closing llm ws for: ", callId);
-        });
+          ws.on("error", (err) => {
+            console.error("Error received in LLM websocket client: ", err);
+          });
+          ws.on("close", (err) => {
+            clearTimeout(timeoutId);
+            console.error("Closing llm ws for: ", callId);
+          });
 
-        ws.on("message", async (data: RawData, isBinary: boolean) => {
-          if (isBinary) {
-            console.error("Got binary message instead of text in websocket.");
-            ws.close(1002, "Cannot find corresponding Retell LLM.");
-          }
-          try {
+          ws.on("message", async (data: RawData, isBinary: boolean) => {
+            if (isBinary) {
+              console.error("Got binary message instead of text in websocket.");
+              ws.close(1002, "Cannot find corresponding Retell LLM.");
+            }
             const request: CustomLlmRequest = JSON.parse(data.toString());
 
             // There are 5 types of interaction_type: call_details, pingpong, update_only, response_required, and reminder_required.
             // Not all of them need to be handled, only response_required and reminder_required.
-            if (request.interaction_type === "pingpong") {
+            if (request.interaction_type === "ping_pong") {
               ws.send(
                 JSON.stringify({
-                  response_type: "pingpong",
-                  content: request.content,
+                  response_type: "ping_pong",
+                  timestamp: request.timestamp,
                 }),
               );
             } else if (request.interaction_type === "call_details") {
-              console.log("call details: ", request.content);
+              console.log("call details: ", request.call);
               // print call detailes
             } else if (request.interaction_type === "update_only") {
               // process live transcript update if needed
@@ -140,11 +137,11 @@ export class Server {
               console.log("req", request);
               llmClient.DraftResponse(request, ws);
             }
-          } catch (err) {
-            console.error("Error in parsing LLM websocket message: ", err);
-            ws.close(1002, "Cannot parse incoming message.");
-          }
-        });
+          });
+        } catch (err) {
+          console.error("Encountered erorr:", err);
+          ws.close(1005, "Encountered erorr: " + err);
+        }
       },
     );
   }

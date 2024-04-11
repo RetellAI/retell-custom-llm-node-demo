@@ -8,19 +8,22 @@ export interface CustomLlmRequest {
     | "update_only"
     | "response_required"
     | "reminder_required"
-    | "pingpong"
+    | "ping_pong"
     | "call_details";
-  response_id?: number;
-  transcript?: Utterance[];
-  content?: any;
+  response_id?: number; // Used by update_only and response_required
+  transcript?: Utterance[]; // Used by update_only and response_required
+  call?: any; // Used by call_details
+  timestamp?: number; // Used by ping_pong
 }
 
 export interface CustomLlmResponse {
-  response_type: "response" | "config" | "pingpong";
-  response_id: number;
-  content?: any;
-  content_complete?: boolean;
-  end_call?: boolean;
+  response_type: "response" | "config" | "ping_pong";
+  response_id?: number; // Used by response
+  content?: any; // Used by response
+  content_complete?: boolean; // Used by response
+  end_call?: boolean; // Used by response
+  config?: any; // Used by config
+  timestamp?: number; // Used by ping_pong
 }
 
 export interface FunctionCall {
