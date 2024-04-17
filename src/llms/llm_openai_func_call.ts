@@ -4,6 +4,8 @@ import {
   CustomLlmRequest,
   CustomLlmResponse,
   FunctionCall,
+  ReminderRequiredRequest,
+  ResponseRequiredRequest,
   Utterance,
 } from "../types";
 
@@ -74,15 +76,6 @@ ${responseGuideline}
 ## Role
 ${agentPrompt}
 `;
-/*
- *
- *
- *
- *
- *
- *
- *
- */
 
 export class FunctionCallingLlmClient {
   private client: OpenAI;
@@ -116,7 +109,10 @@ export class FunctionCallingLlmClient {
     return result;
   }
 
-  private PreparePrompt(request: CustomLlmRequest, funcResult?: FunctionCall) {
+  private PreparePrompt(
+    request: ResponseRequiredRequest | ReminderRequiredRequest,
+    funcResult?: FunctionCall,
+  ) {
     const transcript = this.ConversationToChatRequestMessages(
       request.transcript,
     );
@@ -169,7 +165,7 @@ export class FunctionCallingLlmClient {
   // Done in tools import
 
   async DraftResponse(
-    request: CustomLlmRequest,
+    request: ResponseRequiredRequest | ReminderRequiredRequest,
     ws: WebSocket,
     funcResult?: FunctionCall,
   ) {

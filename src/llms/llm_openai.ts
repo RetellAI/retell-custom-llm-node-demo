@@ -1,6 +1,12 @@
 import OpenAI from "openai";
 import { WebSocket } from "ws";
-import { CustomLlmRequest, CustomLlmResponse, Utterance } from "../types";
+import {
+  CustomLlmRequest,
+  CustomLlmResponse,
+  ReminderRequiredRequest,
+  ResponseRequiredRequest,
+  Utterance,
+} from "../types";
 
 // Define the greeting message of the agent. If you don't want the agent speak first, set to empty string ""
 const beginSentence =
@@ -47,7 +53,9 @@ export class DemoLlmClient {
     return result;
   }
 
-  private PreparePrompt(request: CustomLlmRequest) {
+  private PreparePrompt(
+    request: ResponseRequiredRequest | ReminderRequiredRequest,
+  ) {
     let transcript = this.ConversationToChatRequestMessages(request.transcript);
     let requestMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] =
       [
@@ -72,7 +80,10 @@ export class DemoLlmClient {
     return requestMessages;
   }
 
-  async DraftResponse(request: CustomLlmRequest, ws: WebSocket) {
+  async DraftResponse(
+    request: ResponseRequiredRequest | ReminderRequiredRequest,
+    ws: WebSocket,
+  ) {
     const requestMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] =
       this.PreparePrompt(request);
 

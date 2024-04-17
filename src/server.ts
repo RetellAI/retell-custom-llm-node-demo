@@ -7,10 +7,10 @@ import { TwilioClient } from "./twilio_api";
 import { Retell } from "retell-sdk";
 import { RegisterCallResponse } from "retell-sdk/resources/call";
 import { CustomLlmRequest, CustomLlmResponse } from "./types";
-import { FunctionCallingLlmClient } from "./llms/llm_azure_openai_func_call_end_call";
+// import { FunctionCallingLlmClient } from "./llms/llm_azure_openai_func_call_end_call";
 // import { FunctionCallingLlmClient } from "./llms/llm_azure_openai_func_call";
 // import { FunctionCallingLlmClient } from "./llms/llm_openai_func_call";
-// import { DemoLlmClient } from "./llms/llm_azure_openai";
+import { DemoLlmClient } from "./llms/llm_azure_openai";
 // import { DemoLlmClient } from "./llms/llm_openrouter";
 
 export class Server {
@@ -93,7 +93,7 @@ export class Server {
           ws.send(JSON.stringify(config));
 
           // Start sending the begin message to signal the client is ready.
-          const llmClient = new FunctionCallingLlmClient();
+          const llmClient = new DemoLlmClient();
           llmClient.BeginMessage(ws);
 
           ws.on("error", (err) => {
@@ -113,12 +113,11 @@ export class Server {
             // There are 5 types of interaction_type: call_details, pingpong, update_only, response_required, and reminder_required.
             // Not all of them need to be handled, only response_required and reminder_required.
             if (request.interaction_type === "ping_pong") {
-              ws.send(
-                JSON.stringify({
-                  response_type: "ping_pong",
-                  timestamp: request.timestamp,
-                }),
-              );
+              let pingpongResponse: CustomLlmResponse = {
+                response_type: "ping_pong",
+                timestamp: request.timestamp,
+              };
+              ws.send(JSON.stringify(pingpongResponse));
             } else if (request.interaction_type === "call_details") {
               console.log("call details: ", request.call);
               // print call detailes
