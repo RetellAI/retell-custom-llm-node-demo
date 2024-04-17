@@ -94,7 +94,6 @@ export class Server {
 
           // Start sending the begin message to signal the client is ready.
           const llmClient = new DemoLlmClient();
-          llmClient.BeginMessage(ws);
 
           ws.on("error", (err) => {
             console.error("Error received in LLM websocket client: ", err);
@@ -119,8 +118,10 @@ export class Server {
               };
               ws.send(JSON.stringify(pingpongResponse));
             } else if (request.interaction_type === "call_details") {
-              console.log("call details: ", request.call);
               // print call detailes
+              console.log("call details: ", request.call);
+              // Send begin message to start the conversation
+              llmClient.BeginMessage(ws);
             } else if (request.interaction_type === "update_only") {
               // process live transcript update if needed
             } else if (
