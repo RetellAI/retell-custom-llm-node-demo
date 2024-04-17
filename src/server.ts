@@ -82,10 +82,6 @@ export class Server {
           const callId = req.params.call_id;
           console.log("Handle llm ws for: ", callId);
 
-          const timeoutId = setTimeout(() => {
-            if (ws) ws.close(1002, "Timeout after 60 seconds");
-          }, 1000 * 60);
-
           // Send config to Retell server
           const config: CustomLlmResponse = {
             response_type: "config",
@@ -104,7 +100,6 @@ export class Server {
             console.error("Error received in LLM websocket client: ", err);
           });
           ws.on("close", (err) => {
-            clearTimeout(timeoutId);
             console.error("Closing llm ws for: ", callId);
           });
 
