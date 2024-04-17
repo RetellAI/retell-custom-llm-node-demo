@@ -109,21 +109,13 @@ export class Server {
             }
             const request: CustomLlmRequest = JSON.parse(data.toString());
 
-            // There are 5 types of interaction_type: call_details, pingpong, update_only, response_required, and reminder_required.
+            // There are 5 types of interaction_type: call_details, ping_pong, update_only, response_required, and reminder_required.
             // Not all of them need to be handled, only response_required and reminder_required.
-            if (request.interaction_type === "ping_pong") {
-              let pingpongResponse: CustomLlmResponse = {
-                response_type: "ping_pong",
-                timestamp: request.timestamp,
-              };
-              ws.send(JSON.stringify(pingpongResponse));
-            } else if (request.interaction_type === "call_details") {
+            if (request.interaction_type === "call_details") {
               // print call detailes
               console.log("call details: ", request.call);
               // Send begin message to start the conversation
               llmClient.BeginMessage(ws);
-            } else if (request.interaction_type === "update_only") {
-              // process live transcript update if needed
             } else if (
               request.interaction_type === "reminder_required" ||
               request.interaction_type === "response_required"
@@ -131,6 +123,14 @@ export class Server {
               console.clear();
               console.log("req", request);
               llmClient.DraftResponse(request, ws);
+            } else if (request.interaction_type === "ping_pong") {
+              let pingpongResponse: CustomLlmResponse = {
+                response_type: "ping_pong",
+                timestamp: request.timestamp,
+              };
+              ws.send(JSON.stringify(pingpongResponse));
+            } else if (request.interaction_type === "update_only") {
+              // process live transcript update if needed
             }
           });
         } catch (err) {
