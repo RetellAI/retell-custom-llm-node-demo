@@ -3,7 +3,7 @@ import VoiceResponse from "twilio/lib/twiml/VoiceResponse";
 import expressWs from "express-ws";
 import twilio, { Twilio } from "twilio";
 import Retell from "retell-sdk";
-import { RegisterCallResponse } from "retell-sdk/resources";
+import { RegisterCallResponse } from "retell-sdk/src/resources";
 
 export class TwilioClient {
   private twilio: Twilio;
@@ -38,7 +38,7 @@ export class TwilioClient {
   };
 
   // Update this phone number to use provided agent id. Also updates voice URL address.
-  RegisterPhoneAgent = async (number: string, agentId: string) => {
+  RegisterInboundAgent = async (number: string, agentId: string) => {
     try {
       const phoneNumberObjects = await this.twilio.incomingPhoneNumbers.list();
       let numberSid;
@@ -112,7 +112,8 @@ export class TwilioClient {
     }
   };
 
-  // Twilio voice webhook
+  /* Twilio voice webhook. This will be called whenever there is an incoming or outgoing call. 
+     Register call with Retell at this stage and pass in returned call_id to Retell*/
   ListenTwilioVoiceWebhook = (app: expressWs.Application) => {
     app.post(
       "/twilio-voice-webhook/:agent_id",

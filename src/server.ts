@@ -1,16 +1,17 @@
 import express, { Request, Response } from "express";
+import expressWs from "express-ws";
 import { RawData, WebSocket } from "ws";
 import { createServer, Server as HTTPServer } from "http";
 import cors from "cors";
-import expressWs from "express-ws";
 import { TwilioClient } from "./twilio_api";
 import { Retell } from "retell-sdk";
 import { RegisterCallResponse } from "retell-sdk/resources/call";
 import { CustomLlmRequest, CustomLlmResponse } from "./types";
+// Any one of these following LLM clients can be used to generate responses.
+import { DemoLlmClient } from "./llms/llm_azure_openai";
 // import { FunctionCallingLlmClient } from "./llms/llm_azure_openai_func_call_end_call";
 // import { FunctionCallingLlmClient } from "./llms/llm_azure_openai_func_call";
 // import { FunctionCallingLlmClient } from "./llms/llm_openai_func_call";
-import { DemoLlmClient } from "./llms/llm_azure_openai";
 // import { DemoLlmClient } from "./llms/llm_openrouter";
 
 export class Server {
@@ -26,15 +27,17 @@ export class Server {
     this.app.use(cors());
     this.app.use(express.urlencoded({ extended: true }));
 
-    this.handleRetellLlmWebSocket();
-    this.handleRegisterCallAPI();
-
     this.retellClient = new Retell({
       apiKey: process.env.RETELL_API_KEY,
     });
-
     this.twilioClient = new TwilioClient(this.retellClient);
     this.twilioClient.ListenTwilioVoiceWebhook(this.app);
+
+    this.handleRetellLlmWebSocket();
+    this.handleRegisterCallAPI();
+    this.handleWebhook();
+
+    // If you want to create an outbound call with your number
     // this.twilioClient.CreatePhoneCall(
     //   "+14157122917",
     //   "+14157122912",
@@ -47,7 +50,34 @@ export class Server {
     console.log("Listening on " + port);
   }
 
-  // Only used for web frontend to register call so that frontend don't need api key
+  /* Handle webhook from Retell server. This is used to receive events from Retell server.
+     Including call_started, call_ended, call_analyzed */
+  handleWebhook() {
+    this.app.post("/webhook", (req: Request, res: Response) => {
+      if (
+        !Retell.verify(
+          JSON.stringify(req.body),
+          process.env.RETELL_API_KEY,
+          req.headers["x-retell-signature"] as string,
+        )
+      ) {
+        console.error("Invalid signature");
+        return;
+      }
+      const event = req.body;
+      switch (event.type) {
+        // Your event handling logic goes here
+        default:
+          console.log("Received an unknown event:", event.type);
+      }
+      // Acknowledge the receipt of the event
+      res.json({ received: true });
+    });
+  }
+
+  /* Only used for web call frontend to register call so that frontend don't need api key.
+     If you are using Retell through phone call, you don't need this API. Because
+     this.twilioClient.ListenTwilioVoiceWebhook() will include register-call in its function. */
   handleRegisterCallAPI() {
     this.app.post(
       "/register-call-on-your-server",
@@ -74,6 +104,9 @@ export class Server {
     );
   }
 
+  /* Start a websocket server to exchange text input and output with Retell server. Retell server 
+     will send over transcriptions and other information. This server here will be responsible for
+     generating responses with LLM and send back to Retell server.*/
   handleRetellLlmWebSocket() {
     this.app.ws(
       "/llm-websocket/:call_id",
@@ -105,14 +138,14 @@ export class Server {
           ws.on("message", async (data: RawData, isBinary: boolean) => {
             if (isBinary) {
               console.error("Got binary message instead of text in websocket.");
-              ws.close(1002, "Cannot find corresponding Retell LLM.");
+              ws.close(1007, "Cannot find corresponding Retell LLM.");
             }
             const request: CustomLlmRequest = JSON.parse(data.toString());
 
             // There are 5 types of interaction_type: call_details, ping_pong, update_only, response_required, and reminder_required.
             // Not all of them need to be handled, only response_required and reminder_required.
             if (request.interaction_type === "call_details") {
-              // print call detailes
+              // print call details
               console.log("call details: ", request.call);
               // Send begin message to start the conversation
               llmClient.BeginMessage(ws);
@@ -134,8 +167,8 @@ export class Server {
             }
           });
         } catch (err) {
-          console.error("Encountered erorr:", err);
-          ws.close(1005, "Encountered erorr: " + err);
+          console.error("Encountered error:", err);
+          ws.close(1011, "Encountered error: " + err);
         }
       },
     );

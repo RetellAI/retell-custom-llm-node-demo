@@ -19,7 +19,7 @@ Check this [Youtube Tutorial](https://youtu.be/Tz969io9cPc?feature=shared&t=344)
    - OpenAI is the most widely used one, although the latency can vary.
    - OpenRouter allows you to choose between tons of Open Source AI Models.
 
-3. Install dependencies
+2. Install dependencies
 
 ```bash
 npm install
@@ -59,7 +59,7 @@ To use these features, follow these steps:
 
 3. (optional) Call `CreatePhoneNumber` to get a new number and associate with an agent id. This phone number now can handle inbound calls as long as this server is running.
 
-4. (optional) Call `RegisterPhoneAgent` to register your Twilio number and associate with an agent id. This phone number now can handle inbound calls as long as this server is running.
+4. (optional) Call `RegisterInboundAgent` to register your Twilio number and associate with an agent id. This phone number now can handle inbound calls as long as this server is running.
 
 5. (optional) Call `DeletePhoneNumber` to release a number from your Twilio pool.
 
