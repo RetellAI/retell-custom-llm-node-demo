@@ -54,6 +54,19 @@ interface PingPongResponse {
   timestamp: number;
 }
 
+interface ToolCallInvocationResponse {
+  response_type: "tool_call_invocation";
+  tool_call_id: string;
+  name: string;
+  arguments: string;
+}
+
+interface ToolCallResultResponse {
+  response_type: "tool_call_result";
+  tool_call_id: string;
+  content: string;
+}
+
 interface ResponseResponse {
   response_type: "response";
   response_id: number;
@@ -77,6 +90,8 @@ interface AgentInterruptResponse {
 export type CustomLlmResponse =
   | ConfigResponse
   | PingPongResponse
+  | ToolCallInvocationResponse
+  | ToolCallResultResponse
   | ResponseResponse
   | AgentInterruptResponse;
 
