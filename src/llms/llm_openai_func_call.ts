@@ -1,7 +1,6 @@
 import OpenAI from "openai";
 import { WebSocket } from "ws";
 import {
-  CustomLlmRequest,
   CustomLlmResponse,
   FunctionCall,
   ReminderRequiredRequest,
@@ -155,13 +154,13 @@ export class FunctionCallingLlmClient {
     if (request.interaction_type === "reminder_required") {
       requestMessages.push({
         role: "user",
-        content: "(Now the user has not reponded in a while, you would say:)",
+        content: "(Now the user has not responded in a while, you would say:)",
       });
     }
     return requestMessages;
   }
 
-  // Step 2: Prepare the function calling defition to the prompt
+  // Step 2: Prepare the function calling definition to the prompt
   // Done in tools import
 
   async DraftResponse(
@@ -298,7 +297,7 @@ export class FunctionCallingLlmClient {
           const res: CustomLlmResponse = {
             response_type: "response",
             response_id: request.response_id,
-            // LLM will resturn the function name along with the message property we define
+            // LLM will return the function name along with the message property we define
             // In this case, "The message you will say while setting up the appointment like 'one moment' "
             content: funcCall.arguments.message,
             // If content_complete is false, it means AI will speak later.

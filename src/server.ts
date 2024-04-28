@@ -8,10 +8,10 @@ import { Retell } from "retell-sdk";
 import { RegisterCallResponse } from "retell-sdk/resources/call";
 import { CustomLlmRequest, CustomLlmResponse } from "./types";
 // Any one of these following LLM clients can be used to generate responses.
-import { DemoLlmClient } from "./llms/llm_azure_openai";
+import { FunctionCallingLlmClient } from "./llms/llm_openai_func_call";
+// import { DemoLlmClient } from "./llms/llm_azure_openai";
 // import { FunctionCallingLlmClient } from "./llms/llm_azure_openai_func_call_end_call";
 // import { FunctionCallingLlmClient } from "./llms/llm_azure_openai_func_call";
-// import { FunctionCallingLlmClient } from "./llms/llm_openai_func_call";
 // import { DemoLlmClient } from "./llms/llm_openrouter";
 
 export class Server {
@@ -64,11 +64,19 @@ export class Server {
         console.error("Invalid signature");
         return;
       }
-      const event = req.body;
-      switch (event.type) {
-        // Your event handling logic goes here
+      const content = req.body;
+      switch (content.event) {
+        case "call_started":
+          console.log("Call started event received", content.data.call_id);
+          break;
+        case "call_ended":
+          console.log("Call ended event received", content.data.call_id);
+          break;
+        case "call_analyzed":
+          console.log("Call analyzed event received", content.data.call_id);
+          break;
         default:
-          console.log("Received an unknown event:", event.type);
+          console.log("Received an unknown event:", content.event);
       }
       // Acknowledge the receipt of the event
       res.json({ received: true });
@@ -126,7 +134,7 @@ export class Server {
           ws.send(JSON.stringify(config));
 
           // Start sending the begin message to signal the client is ready.
-          const llmClient = new DemoLlmClient();
+          const llmClient = new FunctionCallingLlmClient();
 
           ws.on("error", (err) => {
             console.error("Error received in LLM websocket client: ", err);
@@ -142,7 +150,7 @@ export class Server {
             }
             const request: CustomLlmRequest = JSON.parse(data.toString());
 
-            // There are 5 types of interaction_type: call_details, ping_pong, update_only, response_required, and reminder_required.
+            // There are 5 types of interaction_type: call_details, ping_pong, update_only,response_required, and reminder_required.
             // Not all of them need to be handled, only response_required and reminder_required.
             if (request.interaction_type === "call_details") {
               // print call details
