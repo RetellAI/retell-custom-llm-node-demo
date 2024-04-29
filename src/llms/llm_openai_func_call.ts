@@ -307,10 +307,28 @@ export class FunctionCallingLlmClient {
           };
           ws.send(JSON.stringify(res));
 
+          // To make the tool invocation show up in transcript
+          const functionInvocationResponse: CustomLlmResponse = {
+            response_type: "tool_call_invocation",
+            tool_call_id: funcCall.id,
+            name: funcCall.funcName,
+            arguments: JSON.stringify(funcCall.arguments)
+          };
+          ws.send(JSON.stringify(functionInvocationResponse));
+
           // Sleep 2s to mimic the actual appointment booking
           // Replace with your actual making appointment functions
           await new Promise((r) => setTimeout(r, 2000));
           funcCall.result = "Appointment booked successfully";
+
+          // To make the tool result show up in transcript
+          const functionResult: CustomLlmResponse = {
+            response_type: "tool_call_result",
+            tool_call_id: funcCall.id,
+            content: "Appointment booked successfully",
+          };
+          ws.send(JSON.stringify(functionResult));
+
           this.DraftResponse(request, ws, funcCall);
         }
       } else {
