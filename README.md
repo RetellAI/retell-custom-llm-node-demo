@@ -40,7 +40,7 @@ npm run dev
 You should see a fowarding address like
 `https://dc14-2601-645-c57f-8670-9986-5662-2c9a-adbd.ngrok-free.app`, and you
 are going to take the hostname `dc14-2601-645-c57f-8670-9986-5662-2c9a-adbd.ngrok-free.app`, prepend it with `wss://`, postpend with
-`/llm-websocket` to create the url to use in the [dashboard](https://beta.retellai.com/dashboard) to create a new agent. Now
+`/llm-websocket` (the route setup to handle LLM websocket connection in the code) to create the url to use in the [dashboard](https://beta.retellai.com/dashboard) to create a new agent. Now
 the agent you created should connect with your localhost.
 
 The custom LLM URL would look like
