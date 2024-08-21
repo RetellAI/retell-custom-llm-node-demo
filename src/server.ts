@@ -5,7 +5,7 @@ import { createServer, Server as HTTPServer } from "http";
 import cors from "cors";
 import { TwilioClient } from "./twilio_api";
 import { Retell } from "retell-sdk";
-import { RegisterCallResponse } from "retell-sdk/resources/call";
+import { WebCallResponse } from "retell-sdk/resources/call";
 import { CustomLlmRequest, CustomLlmResponse } from "./types";
 // Any one of these following LLM clients can be used to generate responses.
 import { FunctionCallingLlmClient } from "./llms/llm_openai_func_call";
@@ -94,7 +94,7 @@ export class Server {
         const { agent_id } = req.body;
 
         try {
-          const callResponse: RegisterCallResponse =
+          const callResponse: WebCallResponse =
             await this.retellClient.call.register({
               agent_id: agent_id,
               audio_websocket_protocol: "web",
