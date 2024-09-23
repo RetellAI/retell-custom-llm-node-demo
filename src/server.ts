@@ -3,9 +3,7 @@ import expressWs from "express-ws";
 import { RawData, WebSocket } from "ws";
 import { createServer, Server as HTTPServer } from "http";
 import cors from "cors";
-import { TwilioClient } from "./twilio_api";
 import { Retell } from "retell-sdk";
-import { RegisterCallResponse } from "retell-sdk/resources/call";
 import { CustomLlmRequest, CustomLlmResponse } from "./types";
 // Any one of these following LLM clients can be used to generate responses.
 import { FunctionCallingLlmClient } from "./llms/llm_openai_func_call";
@@ -17,8 +15,6 @@ import { FunctionCallingLlmClient } from "./llms/llm_openai_func_call";
 export class Server {
   private httpServer: HTTPServer;
   public app: expressWs.Application;
-  private retellClient: Retell;
-  private twilioClient: TwilioClient;
 
   constructor() {
     this.app = expressWs(express()).app;
@@ -27,22 +23,8 @@ export class Server {
     this.app.use(cors());
     this.app.use(express.urlencoded({ extended: true }));
 
-    this.retellClient = new Retell({
-      apiKey: process.env.RETELL_API_KEY,
-    });
-    this.twilioClient = new TwilioClient(this.retellClient);
-    this.twilioClient.ListenTwilioVoiceWebhook(this.app);
-
     this.handleRetellLlmWebSocket();
-    this.handleRegisterCallAPI();
     this.handleWebhook();
-
-    // If you want to create an outbound call with your number
-    // this.twilioClient.CreatePhoneCall(
-    //   "+14157122917",
-    //   "+14157122912",
-    //   "68978b1c29f5ff9c7d7e07e61124d0bb",
-    // );
   }
 
   listen(port: number): void {
@@ -81,35 +63,6 @@ export class Server {
       // Acknowledge the receipt of the event
       res.json({ received: true });
     });
-  }
-
-  /* Only used for web call frontend to register call so that frontend don't need api key.
-     If you are using Retell through phone call, you don't need this API. Because
-     this.twilioClient.ListenTwilioVoiceWebhook() will include register-call in its function. */
-  handleRegisterCallAPI() {
-    this.app.post(
-      "/register-call-on-your-server",
-      async (req: Request, res: Response) => {
-        // Extract agentId from request body; apiKey should be securely stored and not passed from the client
-        const { agent_id } = req.body;
-
-        try {
-          const callResponse: RegisterCallResponse =
-            await this.retellClient.call.register({
-              agent_id: agent_id,
-              audio_websocket_protocol: "web",
-              audio_encoding: "s16le",
-              sample_rate: 24000,
-            });
-          // Send back the successful response to the client
-          res.json(callResponse);
-        } catch (error) {
-          console.error("Error registering call:", error);
-          // Send an error response back to the client
-          res.status(500).json({ error: "Failed to register call" });
-        }
-      },
-    );
   }
 
   /* Start a websocket server to exchange text input and output with Retell server. Retell server 
